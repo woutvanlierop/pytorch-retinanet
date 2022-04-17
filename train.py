@@ -15,8 +15,11 @@ from torch.utils.data import DataLoader
 from retinanet import coco_eval
 from retinanet import csv_eval
 
+from torch.utils.tensorboard import SummaryWriter
+
 assert torch.__version__.split('.')[0] == '1'
 
+writer = SummaryWriter()
 print('CUDA available: {}'.format(torch.cuda.is_available()))
 
 
@@ -144,6 +147,9 @@ def main(args=None):
                 loss_hist.append(float(loss))
 
                 epoch_loss.append(float(loss))
+                writer.add_scalar("Loss/train", epoch_loss, epoch_num)
+                writer.add_scalar("classification_Loss/train", classification_loss, epoch_num)
+                writer.add_scalar("regression_Loss/train", regression_loss, epoch_num)
 
                 print(
                     'Epoch: {} | Iteration: {} | Classification loss: {:1.5f} | Regression loss: {:1.5f} | Running loss: {:1.5f}'.format(
@@ -165,7 +171,8 @@ def main(args=None):
 
             print('Evaluating dataset')
 
-            mAP = csv_eval.evaluate(dataset_val, retinanet)
+            validation_loss = csv_eval.evaluate(dataset_val, retinanet)
+            writer.add_scalar("Loss/val", validation_loss, epoch_num)
 
         scheduler.step(np.mean(epoch_loss))
 
@@ -174,6 +181,8 @@ def main(args=None):
     retinanet.eval()
 
     torch.save(retinanet, 'model_final.pt')
+
+    writer.flush()
 
 
 if __name__ == '__main__':
