@@ -147,7 +147,7 @@ def main(args=None):
                 loss_hist.append(float(loss))
 
                 epoch_loss.append(float(loss))
-                writer.add_scalar("Loss/train", epoch_loss, epoch_num)
+                writer.add_scalar("Loss/train", loss, epoch_num)
                 writer.add_scalar("classification_Loss/train", classification_loss, epoch_num)
                 writer.add_scalar("regression_Loss/train", regression_loss, epoch_num)
 

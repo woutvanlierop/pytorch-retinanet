@@ -232,8 +232,6 @@ def evaluate(
         average_precision  = _compute_ap(recall, precision)
         average_precisions[label] = average_precision, num_annotations
 
-        validation_loss = retinanet.focalLoss()
-
 
     print('\nmAP:')
     for label in range(generator.num_classes()):
@@ -257,5 +255,5 @@ def evaluate(
 
 
 
-    return validation_loss
+    return average_precisions
 
