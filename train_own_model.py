@@ -5,6 +5,7 @@ import numpy as np
 
 import torch
 import torch.optim as optim
+from torch.utils.tensorboard import SummaryWriter
 from torchvision import transforms
 
 from retinanet import model
@@ -15,13 +16,10 @@ from torch.utils.data import DataLoader
 from retinanet import coco_eval
 from retinanet import csv_eval
 
-from torch.utils.tensorboard import SummaryWriter
-
 assert torch.__version__.split('.')[0] == '1'
 
-writer = SummaryWriter()
 print('CUDA available: {}'.format(torch.cuda.is_available()))
-
+writer = SummaryWriter()
 
 def main(args=None):
     parser = argparse.ArgumentParser(description='Simple training script for training a RetinaNet network.')
@@ -91,6 +89,7 @@ def main(args=None):
         raise ValueError('Unsupported model depth, must be one of 18, 34, 50, 101, 152')
 
     use_gpu = True
+    retinanet = torch.load("C:/Users/woutv/PycharmProjects/pytorch-retinanet/csv_retinanet_19.pt")
 
     if use_gpu:
         if torch.cuda.is_available():
@@ -171,11 +170,7 @@ def main(args=None):
 
             print('Evaluating dataset')
 
-            output = csv_eval.evaluate(dataset_val, retinanet)
-            output = output[0]
-            validation_loss = list[output][0]
-            print(validation_loss)
-            writer.add_scalar("Loss/val", validation_loss, epoch_num)
+            mAP = csv_eval.evaluate(dataset_val, retinanet)
 
         scheduler.step(np.mean(epoch_loss))
 
