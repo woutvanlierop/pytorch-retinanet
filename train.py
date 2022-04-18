@@ -171,11 +171,9 @@ def main(args=None):
 
             print('Evaluating dataset')
 
-            output = csv_eval.evaluate(dataset_val, retinanet)
-            output = output[0]
-            validation_loss = list[output][0]
-            print(validation_loss)
-            writer.add_scalar("Loss/val", validation_loss, epoch_num)
+            output = csv_eval.evaluate(dataset_val, retinanet)[0]
+            validation_loss = output[0]
+            writer.add_scalar("Loss/train", validation_loss, epoch_num)
 
         scheduler.step(np.mean(epoch_loss))
 
