@@ -21,7 +21,7 @@ from retinanet.dataloader import CocoDataset, CSVDataset, collater, Resizer, Asp
 assert torch.__version__.split('.')[0] == '1'
 
 print('CUDA available: {}'.format(torch.cuda.is_available()))
-df = pd.read_csv('C:/Users/woutv/PycharmProjects/thesis/number_of_detections.csv')
+# df = pd.read_csv('C:/Users/woutv/PycharmProjects/thesis/number_of_detections.csv')
 
 
 def main(args=None):
@@ -104,11 +104,11 @@ def main(args=None):
 
             print(dataset_val.image_names[idx])
             print(str(count))
-            df.loc[len(df.index)] = [dataset_val.image_names[idx], count]
-        # cv2.imshow('img', img)
-        # cv2.waitKey(0)
+            # df.loc[len(df.index)] = [dataset_val.image_names[idx], count]
+        cv2.imshow('img', img)
+        cv2.waitKey(0)
 
-        df.to_csv(path_or_buf="C:/Users/woutv/PycharmProjects/thesis/number_of_detections.csv", index=False)
+        # df.to_csv(path_or_buf="C:/Users/woutv/PycharmProjects/thesis/number_of_detections.csv", index=False)
 
 
 if __name__ == '__main__':
