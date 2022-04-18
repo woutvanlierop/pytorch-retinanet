@@ -62,7 +62,7 @@ def _compute_ap(recall, precision):
     return ap
 
 
-def _get_detections(dataset, retinanet, score_threshold=0.05, max_detections=100, save_path=None):
+def _get_detections(dataset, retinanet, score_threshold=0.05, max_detections=250, save_path=None):
     """ Get the detections from the retinanet using the generator.
     The result is a list of lists such that the size is:
         all_detections[num_images][num_classes] = detections[num_detections, 4 + num_classes]
@@ -154,8 +154,8 @@ def evaluate(
     retinanet,
     iou_threshold=0.5,
     score_threshold=0.05,
-    max_detections=100,
-    save_path=None
+    max_detections=250,
+    save_path="C:/Users/woutv/PycharmProjects/thesis"
 ):
     """ Evaluate a given dataset using a given retinanet.
     # Arguments
