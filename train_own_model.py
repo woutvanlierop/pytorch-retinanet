@@ -89,7 +89,7 @@ def main(args=None):
         raise ValueError('Unsupported model depth, must be one of 18, 34, 50, 101, 152')
 
     use_gpu = True
-    retinanet = torch.load("C:/Users/woutv/PycharmProjects/pytorch-retinanet/csv_retinanet_19.pt")
+    retinanet = torch.load("C:/Users/woutv/PycharmProjects/pytorch-retinanet/csv_retinanet_16.pt")
 
     if use_gpu:
         if torch.cuda.is_available():
