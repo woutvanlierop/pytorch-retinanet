@@ -173,7 +173,7 @@ def main(args=None):
 
             output = csv_eval.evaluate(dataset_val, retinanet)[0]
             validation_loss = output[0]
-            writer.add_scalar("Loss/train", validation_loss, epoch_num)
+            # writer.add_scalar("Loss/val", validation_loss, epoch_num)
 
         scheduler.step(np.mean(epoch_loss))
 
