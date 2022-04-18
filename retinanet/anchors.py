@@ -16,7 +16,7 @@ class Anchors(nn.Module):
         if ratios is None:
             self.ratios = np.array([0.5, 1, 2])
         if scales is None:
-            self.scales = np.array([2 ** 0, 2 ** (1.0 / 3.0), 2 ** (2.0 / 3.0)])
+            self.scales = np.array([2 ** (-3.0 / 3.0), 2 ** 0, 2 ** (-6.0 / 3.0)])
 
     def forward(self, image):
         
@@ -49,7 +49,7 @@ def generate_anchors(base_size=16, ratios=None, scales=None):
         ratios = np.array([0.5, 1, 2])
 
     if scales is None:
-        scales = np.array([2 ** 0, 2 ** (1.0 / 3.0), 2 ** (2.0 / 3.0)])
+        scales = np.array([2 ** (-3.0 / 3.0), 2 ** 0, 2 ** (-6.0 / 3.0)])
 
     num_anchors = len(ratios) * len(scales)
 
