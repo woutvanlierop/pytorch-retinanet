@@ -175,7 +175,6 @@ def evaluate(
                                      max_detections=max_detections, save_path=save_path)
     all_annotations = _get_annotations(generator)
     fl = np.zeros(len(generator))
-    fls = []
     focalloss = 0
 
     average_precisions = {}
@@ -214,11 +213,10 @@ def evaluate(
                     false_positives = np.append(false_positives, 1)
                     true_positives = np.append(true_positives, 0)
 
-
             for s in scores:
                 fl[i] = fl[i] + (-0.25 * (1 - s) * (1 - s) * np.log(s))
+                fl[i] = fl[i]/len(scores)
 
-            # fls.append(fl)
 
         print(fl)
         focalloss = fl[len(generator)-1]/len(generator)
