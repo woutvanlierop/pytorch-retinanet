@@ -170,7 +170,8 @@ def main(args=None):
 
             print('Evaluating dataset')
 
-            mAP = csv_eval.evaluate(dataset_val, retinanet)
+            focalloss = csv_eval.evaluate(dataset_val, retinanet)
+            writer.add_scalar("Loss/val", focalloss, epoch_num)
 
         scheduler.step(np.mean(epoch_loss))
 
