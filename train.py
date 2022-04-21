@@ -70,7 +70,7 @@ def main(args=None):
         raise ValueError('Dataset type not understood (must be csv or coco), exiting.')
 
     sampler = AspectRatioBasedSampler(dataset_train, batch_size=3, drop_last=False)
-    dataloader_train = DataLoader(dataset_train, num_workers=5, collate_fn=collater, batch_sampler=sampler)
+    dataloader_train = DataLoader(dataset_train, num_workers=4, collate_fn=collater, batch_sampler=sampler)
 
     if dataset_val is not None:
         sampler_val = AspectRatioBasedSampler(dataset_val, batch_size=1, drop_last=False)
@@ -171,9 +171,12 @@ def main(args=None):
 
             print('Evaluating dataset')
 
-            output = csv_eval.evaluate(dataset_val, retinanet)[0]
-            validation_loss = output[0]
-            # writer.add_scalar("Loss/val", validation_loss, epoch_num)
+            # mAP = csv_eval.evaluate(dataset_val, retinanet)[0]
+            # mAP = mAP[0]
+            # writer.add_scalar("Precision/val", mAP, epoch_num)
+
+            focalloss = csv_eval.evaluate(dataset_val, retinanet)
+            writer.add_scalar("Loss/val", focalloss, epoch_num)
 
         scheduler.step(np.mean(epoch_loss))
 
