@@ -174,7 +174,7 @@ def evaluate(
     all_detections = _get_detections(generator, retinanet, score_threshold=score_threshold,
                                      max_detections=max_detections, save_path=save_path)
     all_annotations = _get_annotations(generator)
-    fl = 0
+    fl = np.zeros(len(generator))
     fls = []
     focalloss = 0
 
@@ -186,11 +186,13 @@ def evaluate(
         scores = np.zeros((0,))
         num_annotations = 0.0
 
+
         for i in range(len(generator)):
             detections = all_detections[i][label]
             annotations = all_annotations[i][label]
             num_annotations += annotations.shape[0]
             detected_annotations = []
+
 
             for d in detections:
                 scores = np.append(scores, d[4])
@@ -212,13 +214,14 @@ def evaluate(
                     false_positives = np.append(false_positives, 1)
                     true_positives = np.append(true_positives, 0)
 
-            fl = 0
+
             for s in scores:
-                fl = fl + (-(1 - 0.25) * s * s * np.log(1 - s))
+                fl[i] = fl[i] + (-0.25 * (1 - s) * (1 - s) * np.log(s))
 
-            fls.append(fl)
+            # fls.append(fl)
 
-        focalloss = sum(fls)/len(fls)
+        print(fl)
+        focalloss = fl[len(generator)-1]/len(generator)
 
         # no annotations -> AP for this class is 0 (is this correct?)
         if num_annotations == 0:
