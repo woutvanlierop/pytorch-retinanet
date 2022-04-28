@@ -116,6 +116,8 @@ def main(args=None):
         retinanet.train()
 
         epoch_loss = []
+        epoch_class_loss = []
+        epoch_regr_loss = []
 
         for iter_num, data in enumerate(dataloader_train):
 
@@ -145,16 +147,19 @@ def main(args=None):
 
             # Epoch Loss
             epoch_loss.append(float(loss))
+            epoch_class_loss.append(float(classification_loss))
+            epoch_regr_loss.append(float(regression_loss))
+
 
             writer.add_scalars(f'training_loss/all', {
-                'classification_loss': classification_loss,
-                'regression_loss': regression_loss,
-                'total_loss': loss
+                'classification_loss': np.mean(epoch_class_loss),
+                'regression_loss': np.mean(epoch_regr_loss),
+                'total_loss': np.mean(epoch_loss)
             }, epoch_num)
 
             print(
-                'Epoch: {} | Iteration: {} | Classification loss: {:1.5f} | Regression loss: {:1.5f} | Running loss: {:1.5f}'.format(
-                    epoch_num, iter_num, float(classification_loss), float(regression_loss), np.mean(epoch_loss)))
+                'Epoch: {}/{} | Iteration: {}/{} | Classification loss: {:1.5f} | Regression loss: {:1.5f} | Running loss: {:1.5f}'.format(
+                    epoch_num+1, parser.epochs, iter_num+1, len(dataloader_train), float(classification_loss), float(regression_loss), np.mean(epoch_loss)))
 
             del classification_loss
             del regression_loss
@@ -164,6 +169,8 @@ def main(args=None):
             scheduler.step(np.mean(epoch_loss))
 
         epoch_loss = []
+        epoch_class_loss = []
+        epoch_regr_loss = []
 
         for iter_num, data in enumerate(dataloader_val):
             with torch.no_grad():
@@ -178,16 +185,18 @@ def main(args=None):
 
                 # Epoch Loss
                 epoch_loss.append(float(loss))
+                epoch_class_loss.append(float(classification_loss))
+                epoch_regr_loss.append(float(regression_loss))
 
                 writer.add_scalars(f'validation_loss/all', {
-                    'classification_loss': classification_loss,
-                    'regression_loss': regression_loss,
-                    'total_loss': loss
+                    'classification_loss': np.mean(epoch_class_loss),
+                    'regression_loss': np.mean(epoch_regr_loss),
+                    'total_loss': np.mean(epoch_loss)
                 }, epoch_num)
 
                 print(
-                    'Epoch: {} | Iteration: {} | Classification loss: {:1.5f} | Regression loss: {:1.5f} | Running loss: {:1.5f}'.format(
-                        epoch_num, iter_num, float(classification_loss), float(regression_loss), np.mean(epoch_loss)))
+                    'Epoch: {}/{} | Iteration: {}/{} | Classification loss: {:1.5f} | Regression loss: {:1.5f} | Running loss: {:1.5f}'.format(
+                        epoch_num+1, parser.epochs, iter_num+1, len(dataloader_val), float(classification_loss), float(regression_loss), np.mean(epoch_loss)))
 
                 del classification_loss
                 del regression_loss
