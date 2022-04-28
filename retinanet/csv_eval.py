@@ -215,7 +215,8 @@ def evaluate(
 
             for s in scores:
                 fl[i] = fl[i] + (-0.25 * (1 - s) * (1 - s) * np.log(s))
-                fl[i] = fl[i]/len(scores)
+
+            fl[i] = fl[i] / len(scores)
 
 
         print(fl)
