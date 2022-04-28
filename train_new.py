@@ -66,8 +66,8 @@ def main(args=None):
     else:
         raise ValueError('Dataset type not understood (must be csv or coco), exiting.')
 
-    sampler = AspectRatioBasedSampler(dataset_train, batch_size=3, drop_last=False)
-    dataloader_train = DataLoader(dataset_train, num_workers=4, collate_fn=collater, batch_sampler=sampler)
+    sampler = AspectRatioBasedSampler(dataset_train, batch_size=1, drop_last=False)
+    dataloader_train = DataLoader(dataset_train, num_workers=3, collate_fn=collater, batch_sampler=sampler)
 
     if dataset_val is not None:
         sampler_val = AspectRatioBasedSampler(dataset_val, batch_size=1, drop_last=False)
@@ -131,8 +131,6 @@ def main(args=None):
 
             loss = classification_loss + regression_loss
 
-
-
             if bool(loss == 0):
                 continue
 
@@ -163,7 +161,7 @@ def main(args=None):
 
         # Update the learning rate
         if scheduler is not None:
-            scheduler.step()
+            scheduler.step(np.mean(epoch_loss))
 
         epoch_loss = []
 
