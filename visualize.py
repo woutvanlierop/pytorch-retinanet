@@ -21,7 +21,7 @@ from retinanet.dataloader import CocoDataset, CSVDataset, collater, Resizer, Asp
 assert torch.__version__.split('.')[0] == '1'
 
 print('CUDA available: {}'.format(torch.cuda.is_available()))
-# df = pd.read_csv('C:/Users/woutv/PycharmProjects/thesis/number_of_detections.csv')
+# df = pd.read_csv('C:/Users/woutv/PycharmProjects/thesis/number_of_kernels.csv')
 
 
 def main(args=None):
@@ -43,7 +43,7 @@ def main(args=None):
     else:
         raise ValueError('Dataset type not understood (must be csv or coco), exiting.')
 
-    sampler_val = AspectRatioBasedSampler(dataset_val, batch_size=1, drop_last=False)
+    sampler_val = AspectRatioBasedSampler(dataset_val, batch_size=1, drop_last=False, shuffle=False)
     dataloader_val = DataLoader(dataset_val, num_workers=1, collate_fn=collater, batch_sampler=sampler_val)
 
     retinanet = torch.load(parser.model)
@@ -105,6 +105,8 @@ def main(args=None):
             print(dataset_val.image_names[idx])
             print(str(count))
             # df.loc[len(df.index)] = [dataset_val.image_names[idx], count]
+        # cv2.imwrite('C:/Users/woutv/PycharmProjects/thesis/run95/'+ str(dataset_val.image_names[idx][63:-4]) +'.png', img)
+        print(img.shape)
         cv2.imshow('img', img)
         cv2.waitKey(0)
 
