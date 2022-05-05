@@ -121,7 +121,7 @@ def main(args=None):
 
         for iter_num, data in enumerate(dataloader_train):
 
-            # Reseting gradients after each iter
+            # Resetting gradients after each iter
             optimizer.zero_grad()
 
             # Forward
