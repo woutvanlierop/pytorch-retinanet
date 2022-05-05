@@ -66,7 +66,7 @@ def main(args=None):
     else:
         raise ValueError('Dataset type not understood (must be csv or coco), exiting.')
 
-    sampler = AspectRatioBasedSampler(dataset_train, batch_size=1, drop_last=False, shuffle=True)
+    sampler = AspectRatioBasedSampler(dataset_train, batch_size=2, drop_last=False, shuffle=True)
     dataloader_train = DataLoader(dataset_train, num_workers=3, collate_fn=collater, batch_sampler=sampler)
 
     if dataset_val is not None:
@@ -100,11 +100,11 @@ def main(args=None):
 
     retinanet.training = True
 
-    optimizer = optim.Adam(retinanet.parameters(), lr=1e-5)
+    optimizer = optim.Adam(retinanet.parameters(), lr=1e-3)
 
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, verbose=True)
 
-    loss_hist = collections.deque(maxlen=500)
+    # loss_hist = collections.deque(maxlen=500)
 
     retinanet.train()
     retinanet.module.freeze_bn()
@@ -150,19 +150,20 @@ def main(args=None):
             epoch_class_loss.append(float(classification_loss))
             epoch_regr_loss.append(float(regression_loss))
 
-
-            writer.add_scalars(f'training_loss/all', {
-                'classification_loss': np.mean(epoch_class_loss),
-                'regression_loss': np.mean(epoch_regr_loss),
-                'total_loss': np.mean(epoch_loss)
-            }, epoch_num)
-
             print(
-                'Epoch: {}/{} | Iteration: {}/{} | Classification loss: {:1.5f} | Regression loss: {:1.5f} | Running loss: {:1.5f}'.format(
-                    epoch_num+1, parser.epochs, iter_num+1, len(dataloader_train), float(classification_loss), float(regression_loss), np.mean(epoch_loss)))
+                'Epoch: {}/{} | Iteration: {}/{} | Classification loss: {:1.5f} | Regression loss: {:1.5f} | Running '
+                'loss: {:1.5f}'.format(
+                    epoch_num + 1, parser.epochs, iter_num + 1, len(dataloader_train), float(classification_loss),
+                    float(regression_loss), np.mean(epoch_loss)))
 
             del classification_loss
             del regression_loss
+
+        writer.add_scalars(f'training_loss/all', {
+            'classification_loss': np.mean(epoch_class_loss),
+            'regression_loss': np.mean(epoch_regr_loss),
+            'total_loss': np.mean(epoch_loss)
+        }, epoch_num)
 
         # Update the learning rate
         if scheduler is not None:
@@ -188,26 +189,29 @@ def main(args=None):
                 epoch_class_loss.append(float(classification_loss))
                 epoch_regr_loss.append(float(regression_loss))
 
-                writer.add_scalars(f'validation_loss/all', {
-                    'classification_loss': np.mean(epoch_class_loss),
-                    'regression_loss': np.mean(epoch_regr_loss),
-                    'total_loss': np.mean(epoch_loss)
-                }, epoch_num)
-
                 print(
-                    'Epoch: {}/{} | Iteration: {}/{} | Classification loss: {:1.5f} | Regression loss: {:1.5f} | Running loss: {:1.5f}'.format(
-                        epoch_num+1, parser.epochs, iter_num+1, len(dataloader_val), float(classification_loss), float(regression_loss), np.mean(epoch_loss)))
+                    'Epoch: {}/{} | Iteration: {}/{} | Classification loss: {:1.5f} | Regression loss: {:1.5f} | '
+                    'Running loss: {:1.5f}'.format(
+                        epoch_num + 1, parser.epochs, iter_num + 1, len(dataloader_val), float(classification_loss),
+                        float(regression_loss), np.mean(epoch_loss)))
 
                 del classification_loss
                 del regression_loss
 
+        writer.add_scalars(f'validation_loss/all', {
+            'classification_loss': np.mean(epoch_class_loss),
+            'regression_loss': np.mean(epoch_regr_loss),
+            'total_loss': np.mean(epoch_loss)
+        }, epoch_num)
 
         # Save Model after each epoch
         torch.save(retinanet.module, '{}_retinanet_{}.pt'.format(parser.dataset, epoch_num))
+        torch.save(optimizer.state_dict(), '{}_optimizer_{}.pt'.format(parser.dataset, epoch_num))
 
     torch.save(retinanet, 'model_final.pt')
 
     writer.flush()
+
 
 if __name__ == '__main__':
     main()
