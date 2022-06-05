@@ -1,28 +1,23 @@
-import numpy as np
 import pandas as pd
-import torchvision
-import time
-import os
-import copy
-import pdb
+
+import numpy as np
 import time
 import argparse
 
-import sys
 import cv2
 
 import torch
-from torch.utils.data import Dataset, DataLoader
-from torchvision import datasets, models, transforms
+from torch.utils.data import DataLoader
+from torchvision import transforms
 
-from retinanet.dataloader import CocoDataset, CSVDataset, collater, Resizer, AspectRatioBasedSampler, Augmenter, \
+from retinanet.dataloader import CocoDataset, CSVDataset, collater, Resizer, AspectRatioBasedSampler, \
     UnNormalizer, Normalizer
 
 assert torch.__version__.split('.')[0] == '1'
 
 print('CUDA available: {}'.format(torch.cuda.is_available()))
 # df = pd.read_csv('C:/Users/woutv/PycharmProjects/thesis/number_of_kernels.csv')
-box_sizes = []
+
 counts = []
 
 
@@ -39,9 +34,11 @@ def main(args=None):
     parser = parser.parse_args(args)
 
     if parser.dataset == 'coco':
-        dataset_val = CocoDataset(parser.coco_path, set_name='train2017', transform=transforms.Compose([Normalizer(), Resizer()]))
+        dataset_val = CocoDataset(parser.coco_path, set_name='train2017',
+                                  transform=transforms.Compose([Normalizer(), Resizer()]))
     elif parser.dataset == 'csv':
-        dataset_val = CSVDataset(train_file=parser.csv_val, class_list=parser.csv_classes, transform=transforms.Compose([Normalizer(), Resizer()]))
+        dataset_val = CSVDataset(train_file=parser.csv_val, class_list=parser.csv_classes,
+                                 transform=transforms.Compose([Normalizer(), Resizer()]))
     else:
         raise ValueError('Dataset type not understood (must be csv or coco), exiting.')
 
@@ -71,6 +68,8 @@ def main(args=None):
         cv2.putText(image, caption, (b[0], b[1] - 10), cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 0), 2)
         cv2.putText(image, caption, (b[0], b[1] - 10), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255), 1)
 
+    box_sizes_all = []
+
     for idx, data in enumerate(dataloader_val):
 
         with torch.no_grad():
@@ -90,10 +89,10 @@ def main(args=None):
 
             img = cv2.cvtColor(img.astype(np.uint8), cv2.COLOR_BGR2RGB)
             name = dataset_val.image_names[idx]
-            # img_2 = cv2.imread('C:/Users/woutv/PycharmProjects/thesis/run95_green/' + name[44:])
+            img_2 = cv2.imread('C:/Users/woutv/PycharmProjects/thesis/one_image/green_images/' + name[59:])
+            # img_2 = cv2.resize(img_2, (1544, 3752))
             count = 0
-            box_size = 0
-
+            box_sizes = []
 
             for j in range(idxs[0].shape[0]):
                 bbox = transformed_anchors[idxs[0][j], :]
@@ -103,34 +102,37 @@ def main(args=None):
                 y2 = int(bbox[3])
                 label_name = dataset_val.labels[int(classification[idxs[0][j]])]
                 draw_caption(img, (x1, y1, x2, y2), label_name)
-                # draw_caption(img_2, (x1, y1, x2, y2), label_name)
-                box_size = box_size + (x2-x1)*(y2-y1)
+                draw_caption(img_2, (x1, y1, x2, y2), label_name)
+                box_size = (x2 - x1) * (y2 - y1)
+                box_sizes.append(box_size)
 
                 cv2.rectangle(img, (x1, y1), (x2, y2), color=(0, 0, 255), thickness=2)
-                # cv2.rectangle(img_2, (x1, y1), (x2, y2), color=(0, 0, 255), thickness=2)
+                cv2.rectangle(img_2, (x1, y1), (x2, y2), color=(0, 0, 255), thickness=4)
                 count = count + 1
             # print(label_name)
 
             print(dataset_val.image_names[idx])
             print(str(count))
-            print(box_size/len(range(idxs[0].shape[0])))
-            box_sizes.append(box_size/len(range(idxs[0].shape[0])))
+            # print(box_size / len(range(idxs[0].shape[0])))
+            # box_sizes.append(box_size / len(range(idxs[0].shape[0])))
             counts.append(count)
+            box_sizes_all.append(box_sizes)
 
             # df.loc[len(df.index)] = [dataset_val.image_names[idx], count]
-        # cv2.imwrite('C:/Users/woutv/PycharmProjects/thesis/run95_red/' + parser.model[48:-3] + '/' + name[44:], img_2)
+        # cv2.imwrite('C:/Users/woutv/PycharmProjects/thesis/one_image/2' + name[59:], img)
+        cv2.imwrite('C:/Users/woutv/PycharmProjects/thesis/one_image/' + name[59:], img_2)
         # print(img.shape)
 
         # cv2.imshow('img', img)
         # cv2.waitKey(0)
 
         # df.to_csv(path_or_buf="C:/Users/woutv/PycharmProjects/thesis/number_of_detections.csv", index=False)
-    df = pd.DataFrame(dataset_val.image_names)
-    df['box_size'] = box_sizes
-    df['count'] = counts
-    print(box_sizes)
+    # df = pd.DataFrame(dataset_val.image_names)
+    # df['box_size'] = box_sizes
+    # df['count'] = counts
+    print(box_sizes_all)
     print(counts)
-    df.to_csv(path_or_buf="C:/Users/woutv/PycharmProjects/thesis/number_of_detections_test.csv", index=False)
+    # df.to_csv(path_or_buf="C:/Users/woutv/PycharmProjects/thesis/number_of_detections_test.csv", index=False)
 
 
 if __name__ == '__main__':

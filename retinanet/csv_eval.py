@@ -1,11 +1,24 @@
 from __future__ import print_function
 
+import argparse
+
 import numpy as np
-import json
-import os
 import matplotlib.pyplot as plt
 import torch
+from torchvision import transforms
 
+from retinanet.dataloader import CSVDataset, Normalizer, Resizer
+
+
+def main(args=None):
+    parser = argparse.ArgumentParser(description='Simple training script for training a RetinaNet network.')
+    parser.add_argument('--csv_val', help='Path to file containing validation annotations ')
+    parser.add_argument('--model', help='Path to model.')
+    parser = parser.parse_args(args)
+    retinanet = torch.load(parser.model)
+    dataset_val = CSVDataset(train_file=parser.csv_val, class_list=parser.csv_classes,
+                             transform=transforms.Compose([Normalizer(), Resizer()]))
+    mAP = evaluate(dataset_val, retinanet)
 
 def compute_overlap(a, b):
     """
@@ -174,8 +187,6 @@ def evaluate(
     all_detections = _get_detections(generator, retinanet, score_threshold=score_threshold,
                                      max_detections=max_detections, save_path=save_path)
     all_annotations = _get_annotations(generator)
-    fl = np.zeros(len(generator))
-    focalloss = 0
 
     average_precisions = {}
 
@@ -185,13 +196,11 @@ def evaluate(
         scores = np.zeros((0,))
         num_annotations = 0.0
 
-
         for i in range(len(generator)):
             detections = all_detections[i][label]
             annotations = all_annotations[i][label]
             num_annotations += annotations.shape[0]
             detected_annotations = []
-
 
             for d in detections:
                 scores = np.append(scores, d[4])
@@ -213,15 +222,6 @@ def evaluate(
                     false_positives = np.append(false_positives, 1)
                     true_positives = np.append(true_positives, 0)
 
-            for s in scores:
-                fl[i] = fl[i] + (-0.25 * (1 - s) * (1 - s) * np.log(s))
-
-            fl[i] = fl[i] / len(scores)
-
-
-        print(fl)
-        focalloss = fl[len(generator)-1]/len(generator)
-
         # no annotations -> AP for this class is 0 (is this correct?)
         if num_annotations == 0:
             average_precisions[label] = 0, 0
@@ -238,7 +238,7 @@ def evaluate(
 
         # compute recall and precision
         recall = true_positives / num_annotations
-        precision = true_positives / np.maximum(true_positives + false_positives, np.finfo(np.float64).eps)
+        precision = true_positives / (true_positives + false_positives)
 
         # compute average precision
         average_precision = _compute_ap(recall, precision)
@@ -264,4 +264,8 @@ def evaluate(
             # function to show the plot
             plt.savefig(save_path + '/' + label_name + '_precision_recall.jpg')
 
-    return focalloss
+    return average_precisions
+
+
+if __name__ == '__main__':
+    main()

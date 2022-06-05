@@ -67,7 +67,7 @@ def main(args=None):
         raise ValueError('Dataset type not understood (must be csv or coco), exiting.')
 
     sampler = AspectRatioBasedSampler(dataset_train, batch_size=2, drop_last=False, shuffle=True)
-    dataloader_train = DataLoader(dataset_train, num_workers=5, collate_fn=collater, batch_sampler=sampler)
+    dataloader_train = DataLoader(dataset_train, num_workers=3, collate_fn=collater, batch_sampler=sampler)
 
     if dataset_val is not None:
         sampler_val = AspectRatioBasedSampler(dataset_val, batch_size=1, drop_last=False, shuffle=True)
@@ -100,9 +100,20 @@ def main(args=None):
 
     retinanet.training = True
 
-    optimizer = optim.Adam(retinanet.parameters(), lr=1e-5)
+    optimizer = optim.Adam(retinanet.parameters(), lr=1.05e-4)
 
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, verbose=True)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=0, verbose=True)
+    # scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=100, verbose=True, threshold=1e-3)
+
+    # cyclic learning rate test
+    # scheduler1 = optim.lr_scheduler.CyclicLR(optimizer, 2.25e-5, 9e-5, step_size_up=5526,
+    #                                          mode='triangular', cycle_momentum=False, last_epoch=- 1, verbose=True)
+    # scheduler2 = optim.lr_scheduler.CyclicLR(optimizer, 2.25e-6, 9e-6, step_size_up=2763,
+    #                                          mode='triangular', cycle_momentum=False, last_epoch=- 1, verbose=True)
+    # scheduler3 = optim.lr_scheduler.CyclicLR(optimizer, 2.25e-7, 9e-7, step_size_up=1382,
+    #                                          mode='triangular', cycle_momentum=False, last_epoch=- 1, verbose=True)
+    # scheduler = optim.lr_scheduler.SequentialLR(optimizer, schedulers=[scheduler1, scheduler2, scheduler3],
+    #                                             milestones=[22104, 33156])
 
     # loss_hist = collections.deque(maxlen=500)
 
@@ -142,6 +153,11 @@ def main(args=None):
             # Gradient Clipping
             torch.nn.utils.clip_grad_norm_(retinanet.parameters(), 0.1)
 
+            # # weights update
+            # if ((iter_num + 1) % 2 == 0) or (iter_num + 1 == len(dataloader_train)):
+            #     optimizer.step()
+            #     optimizer.zero_grad()
+
             # Updating Weights
             optimizer.step()
 
@@ -150,18 +166,24 @@ def main(args=None):
             epoch_class_loss.append(float(classification_loss))
             epoch_regr_loss.append(float(regression_loss))
 
+            # Update the learning rate
+            # if scheduler is not None:
+            #     scheduler.step()
+
+            writer.add_scalars(f'iteration_loss/all', {
+                'total': loss,
+                'classification': classification_loss,
+                'regression': regression_loss
+            }, iter_num + epoch_num * 4909)
+
             print(
                 'Epoch: {}/{} | Iteration: {}/{} | Classification loss: {:1.5f} | Regression loss: {:1.5f} | Running '
                 'loss: {:1.5f}'.format(
                     epoch_num + 1, parser.epochs, iter_num + 1, len(dataloader_train), float(classification_loss),
-                    float(regression_loss), np.mean(epoch_loss)))
+                    float(regression_loss), float(np.mean(epoch_loss))))
 
             del classification_loss
             del regression_loss
-
-        # Update the learning rate
-        if scheduler is not None:
-            scheduler.step(np.mean(epoch_loss))
 
         epoch_loss_val = []
         epoch_class_loss_val = []
@@ -192,6 +214,10 @@ def main(args=None):
                 del classification_loss
                 del regression_loss
 
+        # Update the learning rate
+        if scheduler is not None:
+            scheduler.step(np.mean(epoch_loss_val))
+
         writer.add_scalars(f'total_loss/all', {
             'training': np.mean(epoch_loss),
             'validation': np.mean(epoch_loss_val)
@@ -209,7 +235,6 @@ def main(args=None):
 
         # Save Model after each epoch
         torch.save(retinanet.module, '{}_retinanet_{}.pt'.format(parser.dataset, epoch_num))
-        torch.save(optimizer.state_dict(), '{}_optimizer_{}.pt'.format(parser.dataset, epoch_num))
 
         print(optimizer.param_groups[0]['lr'])
 

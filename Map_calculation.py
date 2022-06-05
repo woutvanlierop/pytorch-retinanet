@@ -248,7 +248,14 @@ def evaluate(
         recalls.append(recall[-1])
         precision = true_positives / (true_positives + false_positives)
         precisions.append(precision[-1])
-        f1 = 2*(precision*recall)/(precision+recall)
+        f1 = []
+        for idx in range(len(precision)):
+            if precision[idx] == 0 and recall[idx] == 0:
+                f1.append(0)
+            else:
+                f1.append(2 * (precision[idx] * recall[idx]) / (precision[idx] + recall[idx]))
+        # f1 = 2*(precision*recall)/(precision+recall)
+        # f1 = np.divide(2*precision*recall, precision+recall)
         for idx in range(len(f1)):
             if f1[idx] == max(f1):
                 best_values = (recall[idx], precision[idx])
